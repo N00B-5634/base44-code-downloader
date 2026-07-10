@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Base44 Downloader</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <p class="eyebrow">Base44</p>
+          <h1>Code Downloader</h1>
+        </div>
+        <span class="badge" id="tabStatus">...</span>
+      </header>
+
+      <label class="field">
+        <span>Project ID</span>
+        <input id="appId" placeholder="np. 6a503aea6890e6682802f76c">
+      </label>
+
+      <div class="actions">
+        <button id="detectBtn" type="button">Wykryj projekt</button>
+        <button id="downloadBtn" type="button" class="primary">Pobierz ZIP</button>
+      </div>
+
+      <section class="advanced">
+        <button id="toggleAdvanced" type="button" class="link">Tryb awaryjny: lista plików</button>
+        <div id="advancedPanel" hidden>
+          <p>
+            Gdy Base44 blokuje endpoint kodu, wklej ścieżki plików po jednej w linii.
+            Wtyczka przełączy edytor po kolei i odczyta pliki z Monaco.
+          </p>
+          <div class="actions">
+            <button id="detectPathsBtn" type="button">Wykryj ścieżki</button>
+            <button id="downloadByPathsBtn" type="button">Pobierz po ścieżkach</button>
+          </div>
+          <textarea id="paths" spellcheck="false" placeholder="src/App.jsx&#10;src/main.jsx&#10;package.json"></textarea>
+        </div>
+      </section>
+
+      <pre id="log" aria-live="polite"></pre>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
