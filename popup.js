@@ -97,14 +97,21 @@ downloadBtn.addEventListener("click", async () => {
     log("Pobieram kod przez API Base44...");
     const result = await runInPage(downloadProjectFromApi, [appId]);
     if (!result.ok) {
-      const paths = parsePaths(pathsInput.value);
-      log(`${result.error}\n\nBase44 blokuje bezpośredni odczyt. Przechodzę automatycznie na tryb awaryjny: ${paths.length} plików przez Monaco...`);
+      let paths = parsePaths(pathsInput.value);
+      try {
+        const detected = await runInPage(detectPathsFromPage, []);
+        if (detected.paths?.length) {
+          paths = detected.paths;
+          pathsInput.value = paths.join("\n");
+        }
+      } catch {}
+      log(`${result.error}\n\nBase44 blokuje bezpośredni odczyt. Przechodzę automatycznie na tryb awaryjny: ${paths.length} plików przez edytor...`);
       const fallback = await runInPage(downloadProjectByPaths, [appId, paths]);
       if (!fallback.ok) {
         log(`${fallback.error}\n\nNiepobrane:\n${(fallback.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
         return;
       }
-      await saveZip(fallback.files, `base44-${appId}-monaco.zip`);
+      await saveZip(fallback.files, `base44-${appId}-editor.zip`);
       const failed = fallback.failures?.length ? `\nPominięto: ${fallback.failures.length}` : "";
       log(`Gotowe fallbackiem: ${Object.keys(fallback.files).length} plików zapisanych jako ZIP.${failed}`);
       return;
@@ -132,13 +139,13 @@ downloadByPathsBtn.addEventListener("click", async () => {
     const appId = requireAppId();
     const paths = parsePaths(pathsInput.value);
     if (!paths.length) throw new Error("Lista ścieżek jest pusta.");
-    log(`Pobieram ${paths.length} plików przez edytor Monaco...`);
+    log(`Pobieram ${paths.length} plików przez edytor...`);
     const result = await runInPage(downloadProjectByPaths, [appId, paths]);
     if (!result.ok) {
       log(`${result.error}\n\nNiepobrane:\n${(result.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
       return;
     }
-    await saveZip(result.files, `base44-${appId}-monaco.zip`);
+    await saveZip(result.files, `base44-${appId}-editor.zip`);
     const failed = result.failures?.length ? `\nPominięto: ${result.failures.length}` : "";
     log(`Gotowe: ${Object.keys(result.files).length} plików zapisanych jako ZIP.${failed}`);
   });
@@ -233,36 +240,149 @@ async function downloadProjectFromApi(appId) {
   }
 }
 
-async function downloadProjectByPaths(appId, paths) {
+async function downloadProjectByPaths(_appId, paths) {
   const files = {};
   const failures = [];
 
   for (const path of paths) {
     try {
-      files[path] = await readMonacoFile(appId, path);
+      files[path] = await readEditorFile(path);
     } catch (error) {
       failures.push({ path, error: error?.message || String(error) });
     }
   }
 
   if (!Object.keys(files).length) {
-    return { ok: false, error: "Nie udało się pobrać żadnego pliku przez Monaco.", failures };
+    return { ok: false, error: "Nie udało się pobrać żadnego pliku przez edytor.", failures };
   }
   return { ok: true, files, failures };
 
-  async function readMonacoFile(appId, path) {
-    const url = `/apps/${appId}/editor/workspace/code?filePath=${encodeURIComponent(path)}`;
-    history.pushState(null, "", url);
-    window.dispatchEvent(new PopStateEvent("popstate"));
+  async function readEditorFile(path) {
+    const normalizedPath = normalizePath(path);
+    await openPathInTree(normalizedPath);
+    await waitForEditorPath(normalizedPath);
+    return readEditorText();
+  }
 
-    for (let i = 0; i < 60; i++) {
-      await sleep(i < 3 ? 180 : 300);
-      const models = window.monaco?.editor?.getModels?.() || [];
-      const hit = models.find((model) => String(model.uri).endsWith(`/${path}`))
-        || models.find((model) => String(model.uri).includes(`/${path}`));
-      if (hit) return hit.getValue();
+  async function openPathInTree(path) {
+    const segments = normalizePath(path).split("/").filter(Boolean);
+    if (!segments.length) throw new Error("Ścieżka pliku jest pusta.");
+
+    const navigation = findNavigationRoot();
+    if (!navigation) throw new Error("Nie znalazłem drzewa plików Base44.");
+    let container = findTreeContainer(navigation);
+    if (!container) throw new Error("Nie znalazłem zawartości drzewa plików Base44.");
+
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      const button = findTreeButton(container, segment);
+      if (!button) {
+        throw new Error(`Nie znalazłem segmentu "${segment}" w drzewku plików.`);
+      }
+
+      const isLast = i === segments.length - 1;
+      if (isLast) {
+        if (getEditorPath().endsWith(`/${path}`)) return;
+        activate(button);
+        return;
+      }
+
+      if (button.getAttribute("data-state") !== "open") {
+        activate(button);
+      }
+      container = await waitForTreeSegment(button, segments[i + 1]);
     }
-    throw new Error("Nie znaleziono modelu Monaco dla pliku.");
+  }
+
+  async function waitForEditorPath(path) {
+    const targetSuffix = `/${path}`;
+    for (let i = 0; i < 60; i++) {
+      if (getEditorPath().endsWith(targetSuffix)) return;
+      await sleep(i < 5 ? 100 : 150);
+    }
+    throw new Error(`Nie udało się otworzyć pliku "${path}".`);
+  }
+
+  async function waitForTreeSegment(folderButton, segment) {
+    const wanted = normalizeButtonText(segment);
+    for (let i = 0; i < 30; i++) {
+      const container = getFolderContents(folderButton);
+      if (container) {
+        const button = findTreeButton(container, wanted);
+        if (button) return container;
+      }
+      await sleep(100);
+    }
+    throw new Error(`Nie pojawił się segment "${segment}" w drzewku plików.`);
+  }
+
+  function findNavigationRoot() {
+    return document.querySelector('[role="navigation"]') || document.querySelector("nav");
+  }
+
+  function findTreeContainer(navigation) {
+    return Array.from(navigation.querySelectorAll("div")).find((container) => {
+      const nodes = Array.from(container.children);
+      return nodes.length > 0 && nodes.every((node) => getNodeButton(node));
+    }) || null;
+  }
+
+  function findTreeButton(container, label) {
+    const wanted = normalizeButtonText(label);
+    for (const node of Array.from(container.children)) {
+      const button = getNodeButton(node);
+      if (button && normalizeButtonText(button.textContent) === wanted && isVisible(button)) return button;
+    }
+    return null;
+  }
+
+  function getNodeButton(node) {
+    return Array.from(node?.children || []).find((child) => child.tagName === "BUTTON") || null;
+  }
+
+  function getFolderContents(folderButton) {
+    const folderNode = folderButton?.parentElement;
+    return Array.from(folderNode?.children || []).filter((child) => child !== folderButton && child.tagName === "DIV").pop() || null;
+  }
+
+  function activate(button) {
+    if (typeof button.click === "function") {
+      button.click();
+      return;
+    }
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  }
+
+  function findEditorRoot() {
+    const editors = Array.from(document.querySelectorAll(".monaco-editor"));
+    if (!editors.length) return null;
+    return editors.find((editor) => editor.classList.contains("focused")) || editors[0];
+  }
+
+  function getEditorPath() {
+    return findEditorRoot()?.dataset?.uri || "";
+  }
+
+  function readEditorText() {
+    const editor = findEditorRoot();
+    if (!editor) throw new Error("Nie znaleziono edytora kodu.");
+    const viewLines = editor.querySelector(".view-lines");
+    if (!viewLines) throw new Error("Nie udało się odczytać kodu z edytora.");
+    return viewLines.innerText.replace(/\u00a0/g, " ").replace(/\r\n/g, "\n").trimEnd();
+  }
+
+  function normalizePath(value) {
+    return String(value).replace(/\\/g, "/").replace(/^\/+/, "").trim();
+  }
+
+  function normalizeButtonText(value) {
+    return String(value).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function isVisible(element) {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
   }
 
   function sleep(ms) {
@@ -270,51 +390,76 @@ async function downloadProjectByPaths(appId, paths) {
   }
 }
 
-function detectPathsFromPage() {
-  const text = document.body?.innerText || "";
-  const block = text.split("Code files")[1]?.split("Split view")[0] || "";
-  const lines = block.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  const files = [];
-  const knownTopFiles = new Set([
-    ".gitignore", "AGENTS.md", "CLAUDE.md", "components.json", "eslint.config.js",
-    "index.html", "jsconfig.json", "package.json", "postcss.config.js", "README.md",
-    "tailwind.config.js", "vite.config.js"
-  ]);
-  const srcFolders = new Set(["api", "components", "hooks", "lib", "pages", "utils"]);
-  let top = "";
-  let srcFolder = "";
-  let inGithubWorkflows = false;
+async function detectPathsFromPage() {
+  const navigation = document.querySelector('[role="navigation"]') || document.querySelector("nav");
+  if (!navigation) return { paths: [] };
 
-  for (const line of lines) {
-    if (line === ".github" || line === "base44" || line === "src") {
-      top = line;
-      srcFolder = "";
-      inGithubWorkflows = false;
-      continue;
-    }
-    if (top === ".github" && line === "workflows") {
-      inGithubWorkflows = true;
-      continue;
-    }
-    if (top === "src" && srcFolders.has(line)) {
-      srcFolder = line;
-      continue;
-    }
-    if (line === "entities" || line === "ui") continue;
-    if (!looksLikeFile(line)) continue;
+  const root = findTreeContainer(navigation);
+  if (!root) return { paths: [] };
 
-    if (knownTopFiles.has(line)) files.push(line);
-    else if (top === ".github" && inGithubWorkflows && line !== "dependabot.yml") files.push(`.github/workflows/${line}`);
-    else if (top === ".github") files.push(`.github/${line}`);
-    else if (top === "base44") files.push(`base44/${line}`);
-    else if (top === "src" && srcFolder) files.push(`src/${srcFolder}/${line}`);
-    else if (top === "src") files.push(`src/${line}`);
+  const paths = [];
+  await collectFiles(root, []);
+  return { paths: [...new Set(paths)] };
+
+  async function collectFiles(container, parentPath) {
+    const nodes = Array.from(container.children);
+    for (const node of nodes) {
+      const button = getNodeButton(node);
+      if (!button) continue;
+
+      const name = normalizeText(button.textContent);
+      if (!name) continue;
+
+      if (!button.hasAttribute("data-state")) {
+        paths.push([...parentPath, name].join("/"));
+        continue;
+      }
+
+      if (button.getAttribute("data-state") !== "open") activate(button);
+      const contents = await waitForFolderContents(button);
+      if (contents) await collectFiles(contents, [...parentPath, name]);
+    }
   }
 
-  return { paths: [...new Set(files)] };
+  function findTreeContainer(rootElement) {
+    return Array.from(rootElement.querySelectorAll("div")).find((container) => {
+      const nodes = Array.from(container.children);
+      return nodes.length > 0 && nodes.every((node) => getNodeButton(node));
+    }) || null;
+  }
 
-  function looksLikeFile(value) {
-    return value.startsWith(".") || /\.[a-z0-9]+$/i.test(value);
+  function getNodeButton(node) {
+    return Array.from(node?.children || []).find((child) => child.tagName === "BUTTON") || null;
+  }
+
+  function getFolderContents(folderButton) {
+    const folderNode = folderButton?.parentElement;
+    return Array.from(folderNode?.children || []).filter((child) => child !== folderButton && child.tagName === "DIV").pop() || null;
+  }
+
+  async function waitForFolderContents(folderButton) {
+    for (let i = 0; i < 40; i++) {
+      const contents = getFolderContents(folderButton);
+      if (contents && (folderButton.getAttribute("data-state") === "open" || contents.children.length > 0)) return contents;
+      await sleep(100);
+    }
+    return getFolderContents(folderButton);
+  }
+
+  function activate(button) {
+    if (typeof button.click === "function") {
+      button.click();
+      return;
+    }
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  }
+
+  function normalizeText(value) {
+    return String(value).replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

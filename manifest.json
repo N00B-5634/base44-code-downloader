@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Base44 Code Downloader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pobiera kod projektu Base44 z aktywnej karty jako plik ZIP.",
   "action": {
     "default_title": "Base44 Downloader",
