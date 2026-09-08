@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pl">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,24 +18,24 @@
 
       <label class="field">
         <span>Project ID</span>
-        <input id="appId" placeholder="np. 6a503aea6890e6682802f76c">
+        <input id="appId" placeholder="e.g. 6a503aea6890e6682802f76c">
       </label>
 
       <div class="actions">
-        <button id="detectBtn" type="button">Wykryj projekt</button>
-        <button id="downloadBtn" type="button" class="primary">Pobierz ZIP</button>
+        <button id="detectBtn" type="button">Detect project</button>
+        <button id="downloadBtn" type="button" class="primary">Download ZIP</button>
       </div>
 
       <section class="advanced">
-        <button id="toggleAdvanced" type="button" class="link">Tryb awaryjny: lista plików</button>
+        <button id="toggleAdvanced" type="button" class="link">Emergency mode: file list</button>
         <div id="advancedPanel" hidden>
           <p>
-            Gdy Base44 blokuje endpoint kodu, wklej ścieżki plików po jednej w linii.
-            Wtyczka przełączy edytor po kolei i odczyta pliki z Monaco.
+            If Base44 blocks the code endpoint, paste file paths one per line.
+            The extension will switch the editor to each one and read the code from Monaco.
           </p>
           <div class="actions">
-            <button id="detectPathsBtn" type="button">Wykryj ścieżki</button>
-            <button id="downloadByPathsBtn" type="button">Pobierz po ścieżkach</button>
+            <button id="detectPathsBtn" type="button">Detect paths</button>
+            <button id="downloadByPathsBtn" type="button">Download by paths</button>
           </div>
           <textarea id="paths" spellcheck="false" placeholder="src/App.jsx&#10;src/main.jsx&#10;package.json"></textarea>
         </div>

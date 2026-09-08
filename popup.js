@@ -11,64 +11,26 @@ const downloadByPathsBtn = document.getElementById("downloadByPathsBtn");
 
 let activeTab = null;
 
+// Generic seed list used only as a starting point for "Emergency mode".
+// "Detect paths" overwrites this with whatever the current project's file
+// tree actually contains, so this list doesn't need to be exhaustive.
 const DEFAULT_PATHS = [
-  ".github/workflows/ci.yml",
-  ".github/workflows/dependabot-auto-merge.yml",
-  ".github/dependabot.yml",
-  "base44/config.jsonc",
-  "src/api/base44Client.js",
-  "src/components/AuthLayout.jsx",
-  "src/components/ChatPanel.jsx",
-  "src/components/FileMessage.jsx",
-  "src/components/GlassOrbs.jsx",
-  "src/components/GoogleIcon.jsx",
-  "src/components/IncomingCallModal.jsx",
-  "src/components/Layout.jsx",
-  "src/components/LoadingScreen.jsx",
-  "src/components/NetworkStatus.jsx",
-  "src/components/NetworkStatusToggle.jsx",
-  "src/components/ProfileSettingsModal.jsx",
-  "src/components/ProtectedRoute.jsx",
-  "src/components/ScrollToTop.jsx",
-  "src/components/TypingIndicator.jsx",
-  "src/components/UpdateBanner.jsx",
-  "src/components/UserNotRegisteredError.jsx",
-  "src/components/VideoPanel.jsx",
-  "src/hooks/use-mobile.jsx",
-  "src/hooks/use-size.jsx",
-  "src/hooks/useNetworkStatus.js",
-  "src/lib/app-params.js",
-  "src/lib/AuthContext.jsx",
-  "src/lib/fileUtils.js",
-  "src/lib/PageNotFound.jsx",
-  "src/lib/query-client.js",
-  "src/lib/sounds.js",
-  "src/lib/utils.js",
-  "src/pages/DirectCall.jsx",
-  "src/pages/ForgotPassword.jsx",
-  "src/pages/Home.jsx",
-  "src/pages/Login.jsx",
-  "src/pages/MessengerApp.jsx",
-  "src/pages/Register.jsx",
-  "src/pages/ResetPassword.jsx",
-  "src/pages/Room.jsx",
-  "src/pages/ServerPage.jsx",
-  "src/utils/index.ts",
+  ".gitignore",
+  "package.json",
+  "vite.config.js",
+  "jsconfig.json",
+  "index.html",
+  "tailwind.config.js",
+  "postcss.config.js",
+  "eslint.config.js",
+  "components.json",
+  "src/main.jsx",
   "src/App.jsx",
   "src/index.css",
-  "src/main.jsx",
-  ".gitignore",
-  "AGENTS.md",
-  "CLAUDE.md",
-  "components.json",
-  "eslint.config.js",
-  "index.html",
-  "jsconfig.json",
-  "package.json",
-  "postcss.config.js",
-  "README.md",
-  "tailwind.config.js",
-  "vite.config.js"
+  "src/api/base44Client.js",
+  "src/lib/utils.js",
+  "src/pages/Home.jsx",
+  "base44/config.jsonc"
 ];
 
 init();
@@ -76,16 +38,16 @@ init();
 async function init() {
   activeTab = await getActiveTab();
   const appId = extractAppId(activeTab?.url || "");
-  tabStatus.textContent = appId ? "Base44" : "Brak Base44";
+  tabStatus.textContent = appId ? "Base44" : "No Base44";
   if (appId) appIdInput.value = appId;
   pathsInput.value = DEFAULT_PATHS.join("\n");
-  log(appId ? "Wykryto projekt z aktualnej karty." : "Otwórz kartę edytora Base44 albo wklej Project ID.");
+  log(appId ? "Detected a project from the current tab." : "Open a Base44 editor tab, or paste a Project ID.");
 }
 
 detectBtn.addEventListener("click", async () => {
   activeTab = await getActiveTab();
   const appId = extractAppId(activeTab?.url || "");
-  if (!appId) return log("Nie widzę ID projektu w aktywnej karcie.");
+  if (!appId) return log("I can't see a project ID in the active tab.");
   appIdInput.value = appId;
   tabStatus.textContent = "Base44";
   log(`Project ID: ${appId}`);
@@ -94,30 +56,41 @@ detectBtn.addEventListener("click", async () => {
 downloadBtn.addEventListener("click", async () => {
   await withBusy(downloadBtn, async () => {
     const appId = requireAppId();
-    log("Pobieram kod przez API Base44...");
-    const result = await runInPage(downloadProjectFromApi, [appId]);
-    if (!result.ok) {
-      let paths = parsePaths(pathsInput.value);
-      try {
-        const detected = await runInPage(detectPathsFromPage, []);
-        if (detected.paths?.length) {
-          paths = detected.paths;
-          pathsInput.value = paths.join("\n");
-        }
-      } catch {}
-      log(`${result.error}\n\nBase44 blokuje bezpośredni odczyt. Przechodzę automatycznie na tryb awaryjny: ${paths.length} plików przez edytor...`);
-      const fallback = await runInPage(downloadProjectByPaths, [appId, paths]);
-      if (!fallback.ok) {
-        log(`${fallback.error}\n\nNiepobrane:\n${(fallback.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
-        return;
-      }
-      await saveZip(fallback.files, `base44-${appId}-editor.zip`);
-      const failed = fallback.failures?.length ? `\nPominięto: ${fallback.failures.length}` : "";
-      log(`Gotowe fallbackiem: ${Object.keys(fallback.files).length} plików zapisanych jako ZIP.${failed}`);
+
+    log("Requesting the ZIP export from Base44...");
+    const zip = await runInPage(downloadProjectZip, [appId]);
+    if (zip.ok) {
+      await saveZipBase64(zip.base64, `base44-${appId}.zip`);
+      log(`Done: downloaded the official ZIP export (${formatBytes(zip.byteLength)}).`);
       return;
     }
-    await saveZip(result.files, `base44-${appId}.zip`);
-    log(`Gotowe: ${Object.keys(result.files).length} plików zapisanych jako ZIP.`);
+
+    log(`${zip.error}\n\nFalling back to the code endpoint...`);
+    const result = await runInPage(downloadProjectFromApi, [appId]);
+    if (result.ok) {
+      await saveZip(result.files, `base44-${appId}.zip`);
+      log(`Done: ${Object.keys(result.files).length} files saved as a ZIP.`);
+      return;
+    }
+
+    let paths = parsePaths(pathsInput.value);
+    try {
+      const detected = await runInPage(detectPathsFromPage, []);
+      if (detected.paths?.length) {
+        paths = detected.paths;
+        pathsInput.value = paths.join("\n");
+      }
+    } catch {}
+
+    log(`${result.error}\n\nBase44 is blocking direct reads. Switching automatically to emergency mode: reading ${paths.length} files through the editor...`);
+    const fallback = await runInPage(downloadProjectByPaths, [appId, paths]);
+    if (!fallback.ok) {
+      log(`${fallback.error}\n\nNot downloaded:\n${(fallback.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
+      return;
+    }
+    await saveZip(fallback.files, `base44-${appId}-editor.zip`);
+    const failed = fallback.failures?.length ? `\nSkipped: ${fallback.failures.length}` : "";
+    log(`Done via fallback: ${Object.keys(fallback.files).length} files saved as a ZIP.${failed}`);
   });
 });
 
@@ -130,7 +103,7 @@ detectPathsBtn.addEventListener("click", async () => {
     const detected = await runInPage(detectPathsFromPage, []);
     const paths = detected.paths?.length ? detected.paths : DEFAULT_PATHS;
     pathsInput.value = paths.join("\n");
-    log(`Wykryto ${paths.length} ścieżek. Możesz je poprawić przed pobraniem.`);
+    log(`Detected ${paths.length} paths. You can edit them before downloading.`);
   });
 });
 
@@ -138,16 +111,16 @@ downloadByPathsBtn.addEventListener("click", async () => {
   await withBusy(downloadByPathsBtn, async () => {
     const appId = requireAppId();
     const paths = parsePaths(pathsInput.value);
-    if (!paths.length) throw new Error("Lista ścieżek jest pusta.");
-    log(`Pobieram ${paths.length} plików przez edytor...`);
+    if (!paths.length) throw new Error("The path list is empty.");
+    log(`Reading ${paths.length} files through the editor...`);
     const result = await runInPage(downloadProjectByPaths, [appId, paths]);
     if (!result.ok) {
-      log(`${result.error}\n\nNiepobrane:\n${(result.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
+      log(`${result.error}\n\nNot downloaded:\n${(result.failures || []).map((x) => `- ${x.path}`).join("\n")}`);
       return;
     }
     await saveZip(result.files, `base44-${appId}-editor.zip`);
-    const failed = result.failures?.length ? `\nPominięto: ${result.failures.length}` : "";
-    log(`Gotowe: ${Object.keys(result.files).length} plików zapisanych jako ZIP.${failed}`);
+    const failed = result.failures?.length ? `\nSkipped: ${result.failures.length}` : "";
+    log(`Done: ${Object.keys(result.files).length} files saved as a ZIP.${failed}`);
   });
 });
 
@@ -163,7 +136,7 @@ function extractAppId(url) {
 
 function requireAppId() {
   const appId = appIdInput.value.trim();
-  if (!/^[a-zA-Z0-9_-]{8,}$/.test(appId)) throw new Error("Wklej poprawny Project ID.");
+  if (!/^[a-zA-Z0-9_-]{8,}$/.test(appId)) throw new Error("Paste a valid Project ID.");
   return appId;
 }
 
@@ -173,6 +146,13 @@ function parsePaths(text) {
 
 function log(message) {
   logBox.textContent = message;
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return "unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 async function withBusy(button, task) {
@@ -189,7 +169,7 @@ async function withBusy(button, task) {
 
 async function runInPage(func, args) {
   activeTab = activeTab || await getActiveTab();
-  if (!activeTab?.id) throw new Error("Nie mogę odczytać aktywnej karty.");
+  if (!activeTab?.id) throw new Error("Can't read the active tab.");
   const [result] = await chrome.scripting.executeScript({
     target: { tabId: activeTab.id },
     world: "MAIN",
@@ -199,10 +179,63 @@ async function runInPage(func, args) {
   return result.result;
 }
 
+// Primary path: Base44's official export endpoint. This is the same
+// endpoint the "Export code" button in the Base44 editor uses, and it
+// returns a ready-made ZIP archive of the app's currently saved code, so
+// no local ZIP assembly or file-by-file reading is needed.
+// Docs: https://docs.base44.com/api-reference/export-app-source-code
+async function downloadProjectZip(appId) {
+  try {
+    const token = localStorage.getItem("base44_access_token") || localStorage.getItem("token");
+    const headerVariants = [{}, token ? { Authorization: `Bearer ${token}` } : null].filter(Boolean);
+
+    let lastError = "";
+    for (const extraHeaders of headerVariants) {
+      const response = await fetch(`/api/apps/${appId}/coding/export-to-zip`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/zip", ...extraHeaders }
+      });
+
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        return { ok: true, base64: arrayBufferToBase64(buffer), byteLength: buffer.byteLength };
+      }
+
+      const text = await response.text();
+      let detail = text;
+      try {
+        const parsed = JSON.parse(text);
+        detail = parsed.detail || parsed.message || text;
+      } catch {}
+      lastError = `Base44 export API: ${response.status} ${detail}`;
+
+      // Only worth retrying with a different auth header on auth failures.
+      if (response.status !== 401 && response.status !== 403) break;
+    }
+    return { ok: false, error: lastError || "The ZIP export request failed." };
+  } catch (error) {
+    return { ok: false, error: error?.message || String(error) };
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+}
+
+// Secondary path: an older, undocumented JSON endpoint that some Base44
+// projects still expose. Kept as a fallback in case the official ZIP
+// export above is unavailable for a given app or account.
 async function downloadProjectFromApi(appId) {
   try {
     const token = localStorage.getItem("base44_access_token") || localStorage.getItem("token");
-    if (!token) return { ok: false, error: "Brak tokenu Base44 w tej karcie. Zaloguj się w app.base44.com." };
+    if (!token) return { ok: false, error: "No Base44 token found in this tab. Log in at app.base44.com." };
     const response = await fetch(`/api/apps/${appId}/code`, {
       headers: {
         "Accept": "application/json",
@@ -240,7 +273,7 @@ async function downloadProjectFromApi(appId) {
   }
 }
 
-async function downloadProjectByPaths(_appId, paths) {
+async function downloadProjectByPaths(appId, paths) {
   const files = {};
   const failures = [];
 
@@ -253,31 +286,60 @@ async function downloadProjectByPaths(_appId, paths) {
   }
 
   if (!Object.keys(files).length) {
-    return { ok: false, error: "Nie udało się pobrać żadnego pliku przez edytor.", failures };
+    return { ok: false, error: "Couldn't read any file through the editor.", failures };
   }
   return { ok: true, files, failures };
 
+  // Reads one file's code out of the Monaco editor. Base44's editor route
+  // accepts the target file as a `filePath` query param, e.g.
+  // /apps/{id}/editor/workspace/code?filePath=src%2Fpages%2FOAuthConsent.jsx
+  // so the fastest, most reliable way to open a file is to update the URL
+  // directly (via pushState + a synthetic popstate so the app's client-side
+  // router picks it up) instead of clicking through the file tree one node
+  // at a time. If that doesn't make the editor switch in time — different
+  // router setup, file not indexed yet, etc. — fall back to clicking the
+  // tree node for that path, which is slower but works even when direct
+  // URL navigation doesn't.
   async function readEditorFile(path) {
     const normalizedPath = normalizePath(path);
-    await openPathInTree(normalizedPath);
-    await waitForEditorPath(normalizedPath);
+
+    let opened = await navigateToFileByUrl(appId, normalizedPath);
+    if (!opened) {
+      await openPathInTree(normalizedPath);
+      await waitForEditorPath(normalizedPath);
+    }
     return readEditorText();
+  }
+
+  async function navigateToFileByUrl(appId, path) {
+    if (!appId) return false;
+    const targetUrl = `/apps/${appId}/editor/workspace/code?filePath=${encodeURIComponent(path)}`;
+    if (`${location.pathname}${location.search}` !== targetUrl) {
+      history.pushState(null, "", targetUrl);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+    try {
+      await waitForEditorPath(path, 40);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function openPathInTree(path) {
     const segments = normalizePath(path).split("/").filter(Boolean);
-    if (!segments.length) throw new Error("Ścieżka pliku jest pusta.");
+    if (!segments.length) throw new Error("The file path is empty.");
 
     const navigation = findNavigationRoot();
-    if (!navigation) throw new Error("Nie znalazłem drzewa plików Base44.");
+    if (!navigation) throw new Error("Couldn't find the Base44 file tree.");
     let container = findTreeContainer(navigation);
-    if (!container) throw new Error("Nie znalazłem zawartości drzewa plików Base44.");
+    if (!container) throw new Error("Couldn't find the contents of the Base44 file tree.");
 
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i];
       const button = findTreeButton(container, segment);
       if (!button) {
-        throw new Error(`Nie znalazłem segmentu "${segment}" w drzewku plików.`);
+        throw new Error(`Couldn't find the segment "${segment}" in the file tree.`);
       }
 
       const isLast = i === segments.length - 1;
@@ -294,13 +356,13 @@ async function downloadProjectByPaths(_appId, paths) {
     }
   }
 
-  async function waitForEditorPath(path) {
+  async function waitForEditorPath(path, attempts = 60) {
     const targetSuffix = `/${path}`;
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < attempts; i++) {
       if (getEditorPath().endsWith(targetSuffix)) return;
       await sleep(i < 5 ? 100 : 150);
     }
-    throw new Error(`Nie udało się otworzyć pliku "${path}".`);
+    throw new Error(`Couldn't open the file "${path}".`);
   }
 
   async function waitForTreeSegment(folderButton, segment) {
@@ -313,7 +375,7 @@ async function downloadProjectByPaths(_appId, paths) {
       }
       await sleep(100);
     }
-    throw new Error(`Nie pojawił się segment "${segment}" w drzewku plików.`);
+    throw new Error(`The segment "${segment}" never appeared in the file tree.`);
   }
 
   function findNavigationRoot() {
@@ -365,9 +427,9 @@ async function downloadProjectByPaths(_appId, paths) {
 
   function readEditorText() {
     const editor = findEditorRoot();
-    if (!editor) throw new Error("Nie znaleziono edytora kodu.");
+    if (!editor) throw new Error("Couldn't find the code editor.");
     const viewLines = editor.querySelector(".view-lines");
-    if (!viewLines) throw new Error("Nie udało się odczytać kodu z edytora.");
+    if (!viewLines) throw new Error("Couldn't read the code from the editor.");
     return viewLines.innerText.replace(/\u00a0/g, " ").replace(/\r\n/g, "\n").trimEnd();
   }
 
@@ -461,6 +523,15 @@ async function detectPathsFromPage() {
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
+}
+
+async function saveZipBase64(base64, filename) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
+  await chrome.downloads.download({ url, filename, saveAs: true });
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 async function saveZip(files, filename) {

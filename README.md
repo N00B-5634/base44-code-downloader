@@ -4,18 +4,17 @@ Download your Base44 project source code as a ZIP directly from the Chrome tab y
 
 This extension is built for makers who want a quick local backup, a handoff to another developer, or a starting point for moving a Base44 app into a normal Git workflow.
 
-## Version 1.0.2
+## Version 1.1.0
 
-- Fixed exports that missed nested directories such as `src/api`, `src/components/ui`, `base44/entities`, and `base44/functions`.
-- Added automatic file-tree discovery when the direct Base44 code endpoint is unavailable.
-- Preserved full folder paths and scoped file selection to the active directory, including duplicate filenames.
-- Updated editor recovery to read visible code from the Base44 editor DOM.
+- Now uses Base44's official `GET /api/apps/{app_id}/coding/export-to-zip` export endpoint as the primary download path. This returns a real ZIP archive built by Base44 itself, so the download is complete and accurate.
+- Falls back to an older JSON code endpoint, and finally to the editor-DOM reading mode, only if the official export endpoint isn't available for a given app or account.
+- Full English UI and log messages.
 
 ## Why People Use It
 
 - One-click project detection from the active Base44 editor tab.
-- ZIP export for easy backup and sharing.
-- Automatic fallback when Base44 blocks direct file reads.
+- Uses Base44's own export endpoint for a reliable, complete ZIP.
+- Automatic fallback when the official export endpoint isn't reachable.
 - Editor-DOM recovery mode for projects that can only be read through the editor.
 - No backend, no account, no external server. Everything runs locally in your browser.
 
@@ -34,17 +33,26 @@ This extension is built for makers who want a quick local backup, a handoff to a
 3. Click `Detect project`.
 4. Click `Download ZIP`.
 
-If Base44 returns `412 App does not support direct file reads`, the extension automatically falls back to reading files through the editor.
+The extension first requests Base44's own export archive at
+`/api/apps/{app_id}/coding/export-to-zip`. If that request fails (for
+example if it returns `401`/`403`, or the endpoint isn't available for your
+plan), the extension automatically falls back to an older code endpoint, and
+if that also fails, to reading files through the editor DOM.
 
 ## Fallback Mode
 
-Some Base44 projects do not expose the direct `/code` endpoint. In that case the extension can switch files in the editor and read the code from the Monaco DOM.
+Some Base44 projects or accounts can't reach the official export endpoint.
+In that case the extension can switch files in the editor and read the code
+from the Monaco DOM.
 
-You can also open `Emergency mode: file list`, detect paths from the current page, edit the list, and download only the files you want.
+You can also open `Emergency mode: file list`, detect paths from the current
+page, edit the list, and download only the files you want.
 
 ## Privacy
 
-The extension reads code from the active Base44 tab and generates the ZIP locally in Chrome. It does not upload your code to any third-party service.
+The extension reads code from the active Base44 tab and generates (or saves)
+the ZIP locally in Chrome. It does not upload your code to any third-party
+service.
 
 ## Contributing
 
