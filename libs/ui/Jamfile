@@ -1,4 +1,4 @@
-SubDir HAIKU_TOP libs ui ;
+SubDir libs ui ;
 
 # UI shared library for YellowDocs
 # Contains common UI components and widgets

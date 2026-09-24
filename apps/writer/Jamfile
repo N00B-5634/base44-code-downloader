@@ -1,4 +1,4 @@
-SubDir HAIKU_TOP apps writer ;
+SubDir apps writer ;
 
 # YellowDocs Writer application
 

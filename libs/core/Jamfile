@@ -1,4 +1,4 @@
-SubDir HAIKU_TOP libs core ;
+SubDir libs core ;
 
 # Core shared library for YellowDocs
 # Contains document models, common types, and shared data structures

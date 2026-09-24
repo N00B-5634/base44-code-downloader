@@ -1,4 +1,4 @@
-SubDir HAIKU_TOP libs utils ;
+SubDir libs utils ;
 
 # Utils shared library for YellowDocs
 # Contains file I/O, MIME handling, and utility functions
