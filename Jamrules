@@ -6,20 +6,30 @@
 # Architecture-specific settings
 # ============================================================================
 
+ARCH ?= x86_64 ;
+
 if $(HAIKU_PLATFORM) = x86 {
-	ARCH = x86
-} else if $(HAIKU_PLATFORM) = x86_64 {
-	ARCH = x86_64
-} else if $(HAIKU_PLATFORM) = arm {
-	ARCH = arm
-} else if $(HAIKU_PLATFORM) = arm64 {
-	ARCH = arm64
-} else if $(HAIKU_PLATFORM) = m68k {
-	ARCH = m68k
-} else if $(HAIKU_PLATFORM) = ppc {
-	ARCH = ppc
-} else {
-	ARCH = x86_64
+	ARCH = x86 ;
+}
+
+if $(HAIKU_PLATFORM) = x86_64 {
+	ARCH = x86_64 ;
+}
+
+if $(HAIKU_PLATFORM) = arm {
+	ARCH = arm ;
+}
+
+if $(HAIKU_PLATFORM) = arm64 {
+	ARCH = arm64 ;
+}
+
+if $(HAIKU_PLATFORM) = m68k {
+	ARCH = m68k ;
+}
+
+if $(HAIKU_PLATFORM) = ppc {
+	ARCH = ppc ;
 }
 
 # ============================================================================
