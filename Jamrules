@@ -1,0 +1,194 @@
+# Haiku Build Rules
+# This file provides the necessary Jam rules for building Haiku applications
+# outside of a full Haiku source tree.
+
+# ============================================================================
+# Architecture-specific settings
+# ============================================================================
+
+if $(HAIKU_PLATFORM) = x86 {
+	ARCH = x86
+} else if $(HAIKU_PLATFORM) = x86_64 {
+	ARCH = x86_64
+} else if $(HAIKU_PLATFORM) = arm {
+	ARCH = arm
+} else if $(HAIKU_PLATFORM) = arm64 {
+	ARCH = arm64
+} else if $(HAIKU_PLATFORM) = m68k {
+	ARCH = m68k
+} else if $(HAIKU_PLATFORM) = ppc {
+	ARCH = ppc
+} else {
+	ARCH = x86_64
+}
+
+# ============================================================================
+# Compiler settings
+# ============================================================================
+
+CC ?= gcc ;
+C++ ?= g++ ;
+
+CCFLAGS ?= -O2 ;
+C++FLAGS ?= -O2 ;
+
+# Haiku-specific compiler flags
+HAIKU_CCFLAGS = -DHAIKU -D_BEOS -D__HAIKU__ ;
+HAIKU_C++FLAGS = -DHAIKU -D_BEOS -D__HAIKU__ ;
+
+# Architecture-specific flags
+HAIKU_ARCH_CCFLAGS = ;
+HAIKU_ARCH_C++FLAGS = ;
+
+if $(ARCH) = x86_64 {
+	HAIKU_ARCH_CCFLAGS += -m64 ;
+	HAIKU_ARCH_C++FLAGS += -m64 ;
+}
+
+CCFLAGS += $(HAIKU_CCFLAGS) $(HAIKU_ARCH_CCFLAGS) ;
+C++FLAGS += $(HAIKU_C++FLAGS) $(HAIKU_ARCH_C++FLAGS) ;
+
+# ============================================================================
+# Linker settings
+# ============================================================================
+
+LINKFLAGS ?= ;
+
+# Haiku-specific linker flags
+HAIKU_LINKFLAGS = ;
+
+LINKFLAGS += $(HAIKU_LINKFLAGS) ;
+
+# ============================================================================
+# Standard Haiku libraries
+# ============================================================================
+
+# These are the standard Haiku libraries that applications can link against
+HAIKU_LIBS = be trackersupport network bnetapi ;
+
+# ============================================================================
+# Build rules
+# ============================================================================
+
+# Archive rule - creates static libraries
+rule Archive target : sources : dependencies : flags {
+	local libname = $(target:BS) ;
+	local libpath = $(target:D) ;
+	
+	if $(libpath) {
+		MakeLocate $(libpath) : $(libpath) ;
+	}
+	
+	Depends $(target) : $(sources) ;
+	
+	# Create the archive
+	ARCHIVE $(target) : $(sources) ;
+	
+	# Run ranlib on the archive
+	RANLIB $(target) ;
+}
+
+# Ranlib rule
+rule Ranlib target {
+	RanlibOnTarget $(target) ;
+}
+
+actions RanlibOnTarget {
+	$(RANLIB) $(<)
+}
+
+# SharedLibrary rule - creates shared libraries
+rule SharedLibrary target : sources : dependencies : flags {
+	local libname = $(target:BS) ;
+	local libpath = $(target:D) ;
+	
+	if $(libpath) {
+		MakeLocate $(libpath) : $(libpath) ;
+	}
+	
+	Depends $(target) : $(sources) ;
+	
+	# Compile all sources to object files
+	local objects = $(sources:S=$(SUFOBJ)) ;
+	
+	# Create the shared library
+	SHLIB $(target) : $(objects) ;
+}
+
+# Application rule - creates executable applications
+rule Application target : sources : libraries : resources : flags {
+	local appname = $(target:BS) ;
+	local apppath = $(target:D) ;
+	
+	if $(apppath) {
+		MakeLocate $(apppath) : $(apppath) ;
+	}
+	
+	Depends $(target) : $(sources) ;
+	
+	# Compile all sources to object files
+	local objects = $(sources:S=$(SUFOBJ)) ;
+	
+	# Link the application
+	LINK $(target) : $(objects) $(libraries) ;
+	
+	# Process resources if specified
+	if $(resources) {
+		Depends $(target) : $(resources) ;
+		# Resources are typically handled by the resource compiler
+		# In Haiku, resources are often separate .rdef files compiled with rc
+	}
+}
+
+# Resource file compilation rule
+rule ResourceFile target : source : flags {
+	local resname = $(target:BS) ;
+	local respath = $(target:D) ;
+	
+	if $(respath) {
+		MakeLocate $(respath) : $(respath) ;
+	}
+	
+	Depends $(target) : $(source) ;
+	
+	# Compile resource file
+	RESC $(target) : $(source) ;
+}
+
+actions RESC {
+	$(RESC) -o $(<) $(>)
+}
+
+# ============================================================================
+# Standard actions
+# ============================================================================
+
+actions Archive {
+	$(AR) $(ARFLAGS) $(<) $(>)
+}
+
+actions SHLIB {
+	$(C++) -shared -o $(<) $(>) $(LINKFLAGS) -l$(HAIKU_LIBS)
+}
+
+actions LINK {
+	$(C++) -o $(<) $(>) $(LINKFLAGS) -l$(HAIKU_LIBS)
+}
+
+# ============================================================================
+# File suffixes
+# ============================================================================
+
+SUFOBJ ?= .o ;
+SUFEXE ?= ;
+SUFLIB ?= .a ;
+SUFSHLIB ?= .so ;
+
+# ============================================================================
+# Tool paths (can be overridden)
+# ============================================================================
+
+AR ?= ar ;
+RANLIB ?= ranlib ;
+RESC ?= rc ;
+STRIP ?= strip ;

@@ -31,8 +31,8 @@ status_t DocumentIO::LoadFromFile(DocumentModel* document, const BString& path) 
 		return file.InitCheck();
 	}
 	
-	BDataIO dataIO(&file, B_READ_ONLY);
-	return LoadFromData(document, dataIO);
+	BDataIO dataIO(&file);
+	return LoadFromData(document, &dataIO);
 }
 
 // Save document to file
@@ -47,8 +47,8 @@ status_t DocumentIO::SaveToFile(DocumentModel* document, const BString& path) {
 		return file.InitCheck();
 	}
 	
-	BDataIO dataIO(&file, B_WRITE_ONLY);
-	return SaveToData(document, dataIO);
+	BDataIO dataIO(&file);
+	return SaveToData(document, &dataIO);
 }
 
 // Load document from data
@@ -58,7 +58,8 @@ status_t DocumentIO::LoadFromData(DocumentModel* document, const uint8* data, si
 		return B_BAD_VALUE;
 	}
 	
-	BDataIO dataIO(data, size, B_READ_ONLY);
+	BMemoryIO memoryIO(data, size);
+	BDataIO dataIO(&memoryIO);
 	return LoadFromData(document, &dataIO);
 }
 
@@ -123,21 +124,20 @@ status_t DocumentIO::SaveToData(DocumentModel* document, uint8** data, size_t* s
 	// This is a simplified approach - in reality we'd need to calculate the exact size
 	// For now, we'll use a buffer that grows as needed
 	
-	BDataIO* dataIO = new BDataIO();
+	BMemoryIO memoryIO(1024);
+	BDataIO dataIO(&memoryIO);
 	
-	status_t result = SaveToData(document, dataIO);
+	status_t result = SaveToData(document, &dataIO);
 	
 	if (result == B_OK) {
 		// Get the data
-		dataIO->Seek(0, SEEK_END);
-		*size = dataIO->Position();
-		dataIO->Seek(0, SEEK_SET);
+		memoryIO.Seek(0, SEEK_END);
+		*size = memoryIO.Position();
+		memoryIO.Seek(0, SEEK_SET);
 		
 		*data = new uint8[*size];
-		dataIO->Read(*data, *size);
+		memoryIO.Read(*data, *size);
 	}
-	
-	delete dataIO;
 	
 	return result;
 }
@@ -182,7 +182,7 @@ bool DocumentIO::IsValidDocumentFile(const BString& path) {
 		return false;
 	}
 	
-	BDataIO dataIO(&file, B_READ_ONLY);
+	BDataIO dataIO(&file);
 	
 	uint32 magic, version;
 	return ReadHeader(&dataIO, &magic, &version) == B_OK && magic == kMagicNumber;
@@ -548,7 +548,8 @@ status_t DocumentIO::WriteTextElement(BDataIO* data, DocumentElement* element) {
 	}
 	
 	// Write style
-	result = WriteTextStyle(data, &textElement->Style());
+	TextStyle style = textElement->Style();
+	result = WriteTextStyle(data, &style);
 	if (result != B_OK) {
 		return result;
 	}
@@ -585,7 +586,8 @@ status_t DocumentIO::WriteParagraphElement(BDataIO* data, DocumentElement* eleme
 	}
 	
 	// Write style
-	return WriteParagraphStyle(data, &paragraphElement->Style());
+	ParagraphStyle pstyle = paragraphElement->Style();
+	return WriteParagraphStyle(data, &pstyle);
 }
 
 status_t DocumentIO::ReadImageElement(BDataIO* data, DocumentModel* document) {

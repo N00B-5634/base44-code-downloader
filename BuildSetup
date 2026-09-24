@@ -1,0 +1,73 @@
+# Haiku Build Setup
+# This file sets up the basic build environment for Haiku applications
+# It defines the necessary variables and includes the build rules
+
+# Include the Haiku build rules
+include Jamrules ;
+
+# ============================================================================
+# Default build settings
+# ============================================================================
+
+# Set the default target architecture
+HAIKU_PLATFORM ?= x86_64 ;
+
+# Compiler and tools
+CC ?= gcc ;
+C++ ?= g++ ;
+AR ?= ar ;
+RANLIB ?= ranlib ;
+RESC ?= rc ;
+
+# Compiler flags
+CCFLAGS ?= -O2 ;
+C++FLAGS ?= -O2 ;
+
+# Haiku-specific flags
+HAIKU_CCFLAGS = -DHAIKU -D_BEOS -D__HAIKU__ ;
+HAIKU_C++FLAGS = -DHAIKU -D_BEOS -D__HAIKU__ ;
+
+CCFLAGS += $(HAIKU_CCFLAGS) ;
+C++FLAGS += $(HAIKU_C++FLAGS) ;
+
+# Architecture-specific flags
+if $(HAIKU_PLATFORM) = x86_64 {
+	CCFLAGS += -m64 ;
+	C++FLAGS += -m64 ;
+}
+
+# ============================================================================
+# Standard Haiku include paths
+# ============================================================================
+
+# These paths are typically set by the Haiku build system
+# For standalone builds, you may need to set these manually
+HAIKU_INCLUDE_PATHS ?= ;
+
+if $(HAIKU_INCLUDE_PATHS) {
+	CCFLAGS += -I$(HAIKU_INCLUDE_PATHS) ;
+	C++FLAGS += -I$(HAIKU_INCLUDE_PATHS) ;
+}
+
+# ============================================================================
+# Standard Haiku libraries
+# ============================================================================
+
+HAIKU_LIBS = be trackersupport network bnetapi ;
+
+# ============================================================================
+# Utility functions
+# ============================================================================
+
+# Function to add Haiku-specific includes
+rule AddHaikuIncludes includes : {
+	for i in $(includes) {
+		CCFLAGS += -I$(i) ;
+		C++FLAGS += -I$(i) ;
+	}
+}
+
+# Function to add library dependencies
+rule AddLibraries libs : {
+	HAIKU_LIBS += $(libs) ;
+}

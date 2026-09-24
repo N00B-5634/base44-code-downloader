@@ -5,6 +5,7 @@
 #include <String.h>
 #include <Vector.h>
 #include "DocumentTypes.h"
+#include "TextStyle.h"
 
 namespace YellowDocs {
 namespace Core {

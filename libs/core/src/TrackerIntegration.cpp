@@ -145,7 +145,16 @@ status_t TrackerIntegration::SetApplicationIcon(const BString& appSignature, con
 	}
 	
 	BAppFileInfo appInfo(&file);
-	return appInfo.SetIcon(&file, B_LARGE_ICON);
+	
+	// Load icon bitmap
+	BBitmap* icon = BTranslationUtils::GetBitmap(&file);
+	if (!icon) {
+		return B_ERROR;
+	}
+	
+	status_t result = appInfo.SetIcon(icon, B_LARGE_ICON);
+	delete icon;
+	return result;
 }
 
 // Get file info from Tracker
@@ -156,10 +165,11 @@ status_t TrackerIntegration::GetFileInfo(const BString& path, BString& mimeType,
 		return entry.InitCheck();
 	}
 	
-	BAppFileInfo appInfo(&entry);
+	BNode node(&entry);
+	BAppFileInfo appInfo(&node);
 	char mime[B_MIME_TYPE_LENGTH];
 	
-	if (appInfo.GetType(mime) == B_OK) {
+	if (appInfo.GetSignature(mime) == B_OK) {
 		mimeType = mime;
 		
 		// Get preferred app
@@ -181,14 +191,17 @@ status_t TrackerIntegration::OpenFileWithDefaultApp(const BString& path) {
 		return entry.InitCheck();
 	}
 	
-	BAppFileInfo appInfo(&entry);
+	BNode node(&entry);
+	BAppFileInfo appInfo(&node);
 	
 	// Get preferred app
 	char appSig[B_MIME_TYPE_LENGTH];
-	if (appInfo.GetApp(appSig) == B_OK) {
+	if (appInfo.GetSignature(appSig) == B_OK) {
 		// Launch the application
 		BMessage message(B_REFS_RECEIVED);
-		message.AddRef("refs", &entry);
+		entry_ref ref;
+		entry.GetRef(&ref);
+		message.AddRef("refs", &ref);
 		
 		BMessenger messenger(appSig);
 		if (messenger.IsValid()) {

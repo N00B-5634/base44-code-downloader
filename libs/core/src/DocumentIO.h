@@ -5,6 +5,10 @@
 #include <String.h>
 #include <File.h>
 #include <DataIO.h>
+#include <GraphicsDefs.h>
+#include "DocumentModel.h"
+#include "TextStyle.h"
+#include "ParagraphStyle.h"
 
 namespace YellowDocs {
 namespace Core {
@@ -25,9 +29,11 @@ public:
 	
 	// Load document from data
 	status_t LoadFromData(DocumentModel* document, const uint8* data, size_t size);
+	status_t LoadFromData(DocumentModel* document, BDataIO* data);
 	
 	// Save document to data
 	status_t SaveToData(DocumentModel* document, uint8** data, size_t* size);
+	status_t SaveToData(DocumentModel* document, BDataIO* data);
 	
 	// Check if file is valid YellowDocs Writer document
 	bool IsValidDocumentFile(const BString& path);
