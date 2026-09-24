@@ -1,10 +1,7 @@
 SubDir libs core ;
 
 # Core shared library for YellowDocs
-# Contains document models, common types, and shared data structures
-
 SharedLibrary libyellowdocs-core.a :
-	# Source files
 	src/DocumentTypes.cpp
 	src/TextStyle.cpp
 	src/ParagraphStyle.cpp
@@ -15,10 +12,6 @@ SharedLibrary libyellowdocs-core.a :
 	src/DocumentIO.cpp
 	src/MIMETypeRegistration.cpp
 	src/TrackerIntegration.cpp
-	
-	# Library dependencies
 	: be trackersupport
-	
-	# Compiler flags
 	: -DYELLOWDOCS_CORE_LIBRARY
 ;

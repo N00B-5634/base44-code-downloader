@@ -1,10 +1,7 @@
 SubDir apps writer ;
 
 # YellowDocs Writer application
-
-# Application executable
 Application yellowdocs-writer :
-	# Source files
 	src/main.cpp
 	src/YellowDocsWriterApp.cpp
 	src/MainWindow.cpp
@@ -18,13 +15,7 @@ Application yellowdocs-writer :
 	src/AboutWindow.cpp
 	src/FindPanel.cpp
 	src/ReplacePanel.cpp
-	
-	# Resources
 	resources/YellowDocsWriter.rdef
-	
-	# Library dependencies
 	: be trackersupport libyellowdocs-core.a libyellowdocs-ui.a libyellowdocs-utils.a
-	
-	# Compiler flags
 	: -DYELLOWDOCS_WRITER_APP
 ;

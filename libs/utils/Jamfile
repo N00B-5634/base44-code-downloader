@@ -1,19 +1,12 @@
 SubDir libs utils ;
 
 # Utils shared library for YellowDocs
-# Contains file I/O, MIME handling, and utility functions
-
 SharedLibrary libyellowdocs-utils.a :
-	# Source files
 	src/FileUtils.cpp
 	src/MIMEUtils.cpp
 	src/StringUtils.cpp
 	src/Preferences.cpp
 	src/ClipboardUtils.cpp
-	
-	# Library dependencies
 	: be trackersupport
-	
-	# Compiler flags
 	: -DYELLOWDOCS_UTILS_LIBRARY
 ;

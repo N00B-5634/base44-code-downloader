@@ -1,10 +1,7 @@
 SubDir libs ui ;
 
 # UI shared library for YellowDocs
-# Contains common UI components and widgets
-
 SharedLibrary libyellowdocs-ui.a :
-	# Source files
 	src/Theme.cpp
 	src/Colors.cpp
 	src/Toolbar.cpp
@@ -13,10 +10,6 @@ SharedLibrary libyellowdocs-ui.a :
 	src/RulerView.cpp
 	src/ScrollView.cpp
 	src/SplitView.cpp
-	
-	# Library dependencies
 	: be trackersupport libyellowdocs-core.a libyellowdocs-utils.a
-	
-	# Compiler flags
 	: -DYELLOWDOCS_UI_LIBRARY
 ;
