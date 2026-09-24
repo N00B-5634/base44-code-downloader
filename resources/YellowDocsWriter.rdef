@@ -1,0 +1,93 @@
+// YellowDocs Writer resource definitions
+
+// Application icon
+resource(1) vector_icon {
+	"icon/large" = 64;
+	"icon/small" = 32;
+	"icon/mini" = 16;
+	"icon/name" = "YellowDocs Writer";
+	"icon/signature" = "application/x-vnd.yellowdocs-writer-app";
+	
+	// Icon data would be embedded here
+	// For now, we'll use a placeholder
+	"icon/data/large" = {
+		// 64x64 icon data placeholder
+		0x00000000
+	};
+	"icon/data/small" = {
+		// 32x32 icon data placeholder
+		0x00000000
+	};
+	"icon/data/mini" = {
+		// 16x16 icon data placeholder
+		0x00000000
+	};
+};
+
+// Document icon
+resource(2) vector_icon {
+	"icon/large" = 64;
+	"icon/small" = 32;
+	"icon/mini" = 16;
+	"icon/name" = "YellowDocs Writer Document";
+	"icon/signature" = "application/x-vnd.yellowdocs-writer";
+	
+	// Icon data would be embedded here
+	"icon/data/large" = {
+		// 64x64 document icon data placeholder
+		0x00000000
+	};
+	"icon/data/small" = {
+		// 32x32 document icon data placeholder
+		0x00000000
+	};
+	"icon/data/mini" = {
+		// 16x16 document icon data placeholder
+		0x00000000
+	};
+};
+
+// Application version info
+resource(1000) version_info {
+	"type" = 1;
+	"major" = 1;
+	"middle" = 0;
+	"minor" = 0;
+	"variety" = 0;
+	"internal" = 0;
+	"short_info" = "YellowDocs Writer 1.0.0";
+	"long_info" = "YellowDocs Writer - A native Haiku OS word processor\nVersion 1.0.0\nCopyright 2024 YellowDocs Contributors";
+};
+
+// MIME type registration
+resource(1001) mime_info {
+	"type" = "application/x-vnd.yellowdocs-writer";
+	"short_description" = "YellowDocs Writer Document";
+	"long_description" = "YellowDocs Writer rich text document";
+	"file_extensions" = {
+		"ywrite"
+	};
+	"preferred_app" = "application/x-vnd.yellowdocs-writer-app";
+};
+
+// Application MIME type
+resource(1002) mime_info {
+	"type" = "application/x-vnd.yellowdocs-writer-app";
+	"short_description" = "YellowDocs Writer";
+	"long_description" = "YellowDocs Writer application";
+	"preferred_app" = "application/x-vnd.yellowdocs-writer-app";
+};
+
+// Document type
+resource(1003) file_types {
+	"type" = "application/x-vnd.yellowdocs-writer";
+	"file_extension" = ".ywrite";
+	"mime_type" = "application/x-vnd.yellowdocs-writer";
+	"app_signature" = "application/x-vnd.yellowdocs-writer-app";
+};
+
+// Application type
+resource(1004) app_types {
+	"type" = "application/x-vnd.yellowdocs-writer-app";
+	"signature" = "application/x-vnd.yellowdocs-writer-app";
+};

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- YellowDocs Writer Document Icon -->
+<!-- Original design for YellowDocs Writer documents -->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <!-- YellowDocs accent color: Golden yellow (#FFBF00) -->
+    <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFBF00;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Document paper color -->
+    <linearGradient id="paperGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f8f8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e8e8;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow for depth -->
+    <filter id="shadow" x="-2" y="-2" width="104" height="104">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- Document background -->
+  <rect x="8" y="8" width="48" height="60" rx="2" ry="2" fill="url(#paperGradient)" filter="url(#shadow)"/>
+  
+  <!-- Document top fold -->
+  <path d="M10,8 L54,8 L52,4 L22,4 L20,8 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  
+  <!-- Document content lines -->
+  <g stroke="#666" stroke-width="0.8">
+    <line x1="14" y1="16" x2="50" y2="16"/>
+    <line x1="14" y1="22" x2="46" y2="22"/>
+    <line x1="14" y1="28" x2="50" y2="28"/>
+    <line x1="14" y1="34" x2="44" y2="34"/>
+  </g>
+  
+  <!-- Yellow accent corner -->
+  <path d="M10,8 L10,14 L16,14 L16,8 Z" fill="url(#yellowGradient)"/>
+  
+  <!-- Yellow accent mark -->
+  <circle cx="48" cy="56" r="3" fill="#FFBF00"/>
+</svg>

@@ -1,0 +1,57 @@
+SubDir HAIKU_TOP libs ui ;
+
+# UI shared library for YellowDocs
+# Contains common UI components and widgets
+
+SharedLibrary libyellowdocs-ui.a :
+	# Source files
+	src/Theme.h
+	src/Theme.cpp
+	src/Colors.h
+	src/Colors.cpp
+	src/Toolbar.h
+	src/Toolbar.cpp
+	src/StatusBar.h
+	src/StatusBar.cpp
+	src/DocumentView.h
+	src/DocumentView.cpp
+	src/RulerView.h
+	src/RulerView.cpp
+	src/ScrollView.h
+	src/ScrollView.cpp
+	src/SplitView.h
+	src/SplitView.cpp
+	
+	# Public headers
+	: public headers src
+	
+	# Library dependencies
+	: be trackersupport libyellowdocs-core.a libyellowdocs-utils.a
+	
+	# Compiler flags
+	: -DYELLOWDOCS_UI_LIBRARY
+	
+	# Install to common lib directory
+	: lib
+	
+	# Version info
+	: SONAME=libyellowdocs-ui.so
+	: VERSION=1.0.0
+	: INIT=init_yellowdocs_ui
+	: FINI=fini_yellowdocs_ui
+;
+
+# Install headers for development
+Headers :
+	src/Theme.h
+	src/Colors.h
+	src/Toolbar.h
+	src/StatusBar.h
+	src/DocumentView.h
+	src/RulerView.h
+	src/ScrollView.h
+	src/SplitView.h
+	
+	: lib/develop/headers/yellowdocs/ui
+	: private
+;

@@ -1,0 +1,63 @@
+SubDir HAIKU_TOP libs core ;
+
+# Core shared library for YellowDocs
+# Contains document models, common types, and shared data structures
+
+SharedLibrary libyellowdocs-core.a :
+	# Source files
+	src/DocumentTypes.h
+	src/DocumentTypes.cpp
+	src/TextStyle.h
+	src/TextStyle.cpp
+	src/ParagraphStyle.h
+	src/ParagraphStyle.cpp
+	src/ImageData.h
+	src/ImageData.cpp
+	src/DocumentModel.h
+	src/DocumentModel.cpp
+	src/Selection.h
+	src/Selection.cpp
+	src/UndoManager.h
+	src/UndoManager.cpp
+	src/DocumentIO.h
+	src/DocumentIO.cpp
+	src/MIMETypeRegistration.h
+	src/MIMETypeRegistration.cpp
+	src/TrackerIntegration.h
+	src/TrackerIntegration.cpp
+	
+	# Public headers
+	: public headers src
+	
+	# Library dependencies
+	: be trackersupport
+	
+	# Compiler flags
+	: -DYELLOWDOCS_CORE_LIBRARY
+	
+	# Install to common lib directory
+	: lib
+	
+	# Version info
+	: SONAME=libyellowdocs-core.so
+	: VERSION=1.0.0
+	: INIT=init_yellowdocs_core
+	: FINI=fini_yellowdocs_core
+;
+
+# Install headers for development
+Headers :
+	src/DocumentTypes.h
+	src/TextStyle.h
+	src/ParagraphStyle.h
+	src/ImageData.h
+	src/DocumentModel.h
+	src/Selection.h
+	src/UndoManager.h
+	src/DocumentIO.h
+	src/MIMETypeRegistration.h
+	src/TrackerIntegration.h
+	
+	: lib/develop/headers/yellowdocs/core
+	: private
+;

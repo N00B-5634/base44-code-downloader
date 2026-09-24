@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Underline Toolbar Icon -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFBF00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Underline letter U -->
+  <g fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="8" y1="4" x2="8" y2="16"/>
+    <path d="M8,16 C8,16 10,18 16,16"/>
+    <line x1="16" y1="16" x2="16" y2="4"/>
+  </g>
+  
+  <!-- Yellow underline -->
+  <line x1="6" y1="20" x2="18" y2="20" stroke="url(#yellowGradient)" stroke-width="1.5"/>
+</svg>

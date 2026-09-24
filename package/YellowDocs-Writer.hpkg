@@ -1,0 +1,104 @@
+# YellowDocs Writer HPKG package description
+# This is a template for the HPKG package file
+
+# Package name
+%name YellowDocs Writer
+
+# Package version
+%version 1.0.0
+
+# Package revision
+%revision 1
+
+# Package architecture
+%arch any
+
+# Package provider
+%provider YellowDocs Contributors
+
+# Package packager
+%packager YellowDocs Team
+
+# Package summary
+%summary A native Haiku OS word processor
+
+# Package description
+%description \
+YellowDocs Writer is a compact, responsive, local-first rich-text document editor \
+designed specifically for Haiku OS. It provides a native Haiku interface with \
+familiar keyboard shortcuts and Tracker integration.
+
+Features:
+- Rich text editing with formatting options
+- Native Haiku UI with menus and toolbars
+- Fast startup and low resource usage
+- Local file storage with .ywrite format
+- Tracker file association
+- Original MIME type and document icon
+
+# Package copyright
+%copyright Copyright 2024 YellowDocs Contributors
+
+# Package license
+%license MIT License
+
+# Package URL
+%url https://github.com/YellowDocs/YellowDocs
+
+# Dependencies
+%depends haiku >= r1~beta4
+%depends lib:libbe
+%depends lib:libtracker
+
+# Provides
+%provides {
+	%name = "YellowDocs Writer"
+	%version = "1.0.0"
+	%description = "A native Haiku OS word processor"
+}
+
+# Provides MIME type
+%provides {
+	%name = "application/x-vnd.yellowdocs-writer"
+	%version = "1.0.0"
+	%description = "YellowDocs Writer Document"
+}
+
+# Provides application MIME type
+%provides {
+	%name = "application/x-vnd.yellowdocs-writer-app"
+	%version = "1.0.0"
+	%description = "YellowDocs Writer Application"
+}
+
+# Files to include in package
+
+# Application executable
+%file bin/yellowdocs-writer
+
+# Libraries
+%file lib/libyellowdocs-core.so
+%file lib/libyellowdocs-ui.so
+%file lib/libyellowdocs-utils.so
+
+# Resources
+%dir share/yellowdocs/writer
+%file share/yellowdocs/writer/resources/app_icon.png
+%file share/yellowdocs/writer/resources/document_icon.png
+
+# MIME database
+%dir share/mime_db/application
+%file share/mime_db/application/x-vnd.yellowdocs-writer
+
+# Desktop file for Tracker
+%dir share/desktop_db
+%file share/desktop_db/YellowDocs Writer
+
+# Documentation
+%dir share/doc/yellowdocs/writer
+%file share/doc/yellowdocs/writer/README.md
+%file share/doc/yellowdocs/writer/LICENSE
+
+# Man pages (optional)
+%dir share/man/man1
+%file share/man/man1/yellowdocs-writer.1

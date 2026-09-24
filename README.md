@@ -1,67 +1,73 @@
-# Base44 Code Downloader
+# YellowDocs
 
-Download your Base44 project source code as a ZIP directly from the Chrome tab you already have open.
+A native Haiku OS office suite.
 
-This extension is built for makers who want a quick local backup, a handoff to another developer, or a starting point for moving a Base44 app into a normal Git workflow.
+## Overview
 
-## Version 1.1.0
+YellowDocs is a future native office-suite monorepo for Haiku OS. It aims to provide a compact, responsive, local-first set of productivity applications that feel native to Haiku.
 
-- Now uses Base44's official `GET /api/apps/{app_id}/coding/export-to-zip` export endpoint as the primary download path. This returns a real ZIP archive built by Base44 itself, so the download is complete and accurate.
-- Falls back to an older JSON code endpoint, and finally to the editor-DOM reading mode, only if the official export endpoint isn't available for a given app or account.
-- Full English UI and log messages.
+## Applications
 
-## Why People Use It
+- **YellowDocs Writer**: Rich-text word processor (MVP - this implementation)
+- YellowDocs Sheets: Spreadsheet (future)
+- YellowDocs Slides: Presentation editor (future)
+- YellowDocs Draw: Vector drawing and diagram editor (future)
+- YellowDocs Math: Equation editor (future)
+- YellowDocs Data: Lightweight SQLite database front end (future)
+- YellowDocs Home: Optional suite launcher/document hub (future)
 
-- One-click project detection from the active Base44 editor tab.
-- Uses Base44's own export endpoint for a reliable, complete ZIP.
-- Automatic fallback when the official export endpoint isn't reachable.
-- Editor-DOM recovery mode for projects that can only be read through the editor.
-- No backend, no account, no external server. Everything runs locally in your browser.
+## Current Status
 
-## Install
+This repository contains the first application: **YellowDocs Writer** - a polished, functional rich-text document editor.
 
-1. Download or clone this repository.
-2. Open `chrome://extensions`.
-3. Enable `Developer mode`.
-4. Click `Load unpacked`.
-5. Select this extension folder.
+## Architecture
 
-## How To Download A Project
+```
+YellowDocs/
+├── apps/
+│   └── writer/           # YellowDocs Writer application
+│       ├── src/          # Application source code
+│       └── Jamfile       # Application build rules
+├── libs/
+│   ├── core/             # Shared core library (document models, types)
+│   │   └── src/
+│   ├── ui/               # Shared UI components library
+│   │   └── src/
+│   └── utils/            # Shared utilities (file I/O, MIME, helpers)
+│       └── src/
+├── resources/
+│   ├── icons/            # Application and document icons
+│   └── fonts/            # Optional bundled fonts
+├── package/              # HPKG package layout
+└── Jamfile               # Root build rules
+```
 
-1. Open your project in `app.base44.com`.
-2. Click the Base44 Code Downloader icon.
-3. Click `Detect project`.
-4. Click `Download ZIP`.
+## Building
 
-The extension first requests Base44's own export archive at
-`/api/apps/{app_id}/coding/export-to-zip`. If that request fails (for
-example if it returns `401`/`403`, or the endpoint isn't available for your
-plan), the extension automatically falls back to an older code endpoint, and
-if that also fails, to reading files through the editor DOM.
+```bash
+# From Haiku terminal
+cd /path/to/YellowDocs
+jam -q
+```
 
-## Fallback Mode
+## Installation
 
-Some Base44 projects or accounts can't reach the official export endpoint.
-In that case the extension can switch files in the editor and read the code
-from the Monaco DOM.
+The built package will be created in the `build` directory and can be installed via:
 
-You can also open `Emergency mode: file list`, detect paths from the current
-page, edit the list, and download only the files you want.
+```bash
+pkgman install /path/to/YellowDocs/build/YellowDocs-Writer-*.hpkg
+```
 
-## Privacy
+## Branding
 
-The extension reads code from the active Base44 tab and generates (or saves)
-the ZIP locally in Chrome. It does not upload your code to any third-party
-service.
+- **Suite Name**: YellowDocs
+- **Application**: YellowDocs Writer
+- **Executable**: `yellowdocs-writer`
+- **Document Extension**: `.ywrite`
+- **MIME Type**: `application/x-vnd.yellowdocs-writer`
+- **Application MIME Type**: `application/x-vnd.yellowdocs-writer-app`
+- **Accent Color**: Warm yellow/amber
 
-## Contributing
+## License
 
-Pull requests are welcome. Good first ideas:
-
-- Better automatic file tree detection.
-- Support for more Base44 project layouts.
-- Progress bar for large projects.
-- Export metadata such as app name and timestamp.
-- Better UI states and error messages.
-
-If this helped you rescue or back up a project, star the repo so more builders can find it.
+MIT License - see LICENSE file for details.

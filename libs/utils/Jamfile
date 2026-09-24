@@ -1,0 +1,48 @@
+SubDir HAIKU_TOP libs utils ;
+
+# Utils shared library for YellowDocs
+# Contains file I/O, MIME handling, and utility functions
+
+SharedLibrary libyellowdocs-utils.a :
+	# Source files
+	src/FileUtils.h
+	src/FileUtils.cpp
+	src/MIMEUtils.h
+	src/MIMEUtils.cpp
+	src/StringUtils.h
+	src/StringUtils.cpp
+	src/Preferences.h
+	src/Preferences.cpp
+	src/ClipboardUtils.h
+	src/ClipboardUtils.cpp
+	
+	# Public headers
+	: public headers src
+	
+	# Library dependencies
+	: be trackersupport
+	
+	# Compiler flags
+	: -DYELLOWDOCS_UTILS_LIBRARY
+	
+	# Install to common lib directory
+	: lib
+	
+	# Version info
+	: SONAME=libyellowdocs-utils.so
+	: VERSION=1.0.0
+	: INIT=init_yellowdocs_utils
+	: FINI=fini_yellowdocs_utils
+;
+
+# Install headers for development
+Headers :
+	src/FileUtils.h
+	src/MIMEUtils.h
+	src/StringUtils.h
+	src/Preferences.h
+	src/ClipboardUtils.h
+	
+	: lib/develop/headers/yellowdocs/utils
+	: private
+;
