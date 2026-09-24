@@ -1,6 +1,5 @@
 SubDir libs core ;
 
-# Core shared library for YellowDocs
 SharedLibrary libyellowdocs-core.a :
 	src/DocumentTypes.cpp
 	src/TextStyle.cpp

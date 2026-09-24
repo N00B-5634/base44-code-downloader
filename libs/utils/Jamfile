@@ -1,6 +1,5 @@
 SubDir libs utils ;
 
-# Utils shared library for YellowDocs
 SharedLibrary libyellowdocs-utils.a :
 	src/FileUtils.cpp
 	src/MIMEUtils.cpp

@@ -1,6 +1,5 @@
 SubDir apps writer ;
 
-# YellowDocs Writer application
 Application yellowdocs-writer :
 	src/main.cpp
 	src/YellowDocsWriterApp.cpp

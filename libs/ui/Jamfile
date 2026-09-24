@@ -1,6 +1,5 @@
 SubDir libs ui ;
 
-# UI shared library for YellowDocs
 SharedLibrary libyellowdocs-ui.a :
 	src/Theme.cpp
 	src/Colors.cpp
