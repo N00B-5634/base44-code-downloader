@@ -20,20 +20,11 @@ Application yellowdocs-writer :
 	src/ReplacePanel.cpp
 	
 	# Resources
-	resources:
-		resources/app_icon.png
-		resources/document_icon.png
-		resources/toolbar_icons
-		resources/YellowDocsWriter.rdef
+	resources/YellowDocsWriter.rdef
 	
 	# Library dependencies
 	: be trackersupport libyellowdocs-core.a libyellowdocs-ui.a libyellowdocs-utils.a
 	
 	# Compiler flags
 	: -DYELLOWDOCS_WRITER_APP
-	
-	# Application info
-	: APP_NAME="YellowDocs Writer"
-	: APP_VERSION="1.0.0"
-	: APP_SIGNATURE="application/x-vnd.yellowdocs-writer-app"
 ;

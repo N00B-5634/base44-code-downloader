@@ -116,7 +116,7 @@ rule SharedLibrary target : sources : dependencies : flags {
 }
 
 # Application rule - creates executable applications
-rule Application target : sources : libraries : resources : flags {
+rule Application target : sources : libraries {
 	local appname = $(target:BS) ;
 	local apppath = $(target:D) ;
 	
@@ -131,13 +131,6 @@ rule Application target : sources : libraries : resources : flags {
 	
 	# Link the application
 	LINK $(target) : $(objects) $(libraries) ;
-	
-	# Process resources if specified
-	if $(resources) {
-		Depends $(target) : $(resources) ;
-		# Resources are typically handled by the resource compiler
-		# In Haiku, resources are often separate .rdef files compiled with rc
-	}
 }
 
 # Resource file compilation rule
