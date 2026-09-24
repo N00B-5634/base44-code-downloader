@@ -1,82 +1,32 @@
 # Haiku Build Rules
-# Definitions for Application, SharedLibrary, StaticLibrary rules
-# Compatible with Haiku's Jam
-
-# ============================================================================
-# Compiler and tool settings
-# ============================================================================
+# Minimal working Jamrules for Haiku applications
 
 CC ?= gcc ;
 C++ ?= g++ ;
-
-CCFLAGS ?= -O2 ;
-C++FLAGS ?= -O2 ;
-
-# Haiku-specific compiler flags
-CCFLAGS += -DHAIKU -D_BEOS -D__HAIKU__ ;
-C++FLAGS += -DHAIKU -D_BEOS -D__HAIKU__ ;
-
-# Linker settings
-LINKFLAGS ?= ;
-
-# Tool paths
 AR ?= ar ;
 RANLIB ?= ranlib ;
 RESC ?= rc ;
-STRIP ?= strip ;
 
-# File suffixes
+CCFLAGS ?= -O2 ;
+C++FLAGS ?= -O2 ;
+CCFLAGS += -DHAIKU -D_BEOS -D__HAIKU__ ;
+C++FLAGS += -DHAIKU -D_BEOS -D__HAIKU__ ;
+LINKFLAGS ?= ;
+
 SUFOBJ ?= .o ;
 
-# ============================================================================
-# Standard Haiku libraries
-# ============================================================================
-
-HAIKU_LIBS ?= be trackersupport network bnetapi ;
-
-# ============================================================================
-# Build rules for Haiku
-# ============================================================================
-
-# Application rule - builds an executable
 rule Application target : sources : libraries : flags {
 	Depends $(target) : $(sources) ;
-	LINK $(target) : $(sources) $(libraries) : $(flags) ;
+	$(C++) -o $(target) $(sources) $(LINKFLAGS) -l$(libraries) $(flags) ;
 }
 
-# SharedLibrary rule - builds a shared library (.so)
 rule SharedLibrary target : sources : libraries : flags {
 	Depends $(target) : $(sources) ;
-	LINK $(target) : $(sources) $(libraries) : $(flags) : -shared ;
+	$(C++) -shared -o $(target) $(sources) $(LINKFLAGS) -l$(libraries) $(flags) ;
 }
 
-# StaticLibrary rule - builds a static library (.a)
 rule StaticLibrary target : sources : flags {
 	Depends $(target) : $(sources) ;
-	Archive $(target) : $(sources) ;
-	Ranlib $(target) ;
-}
-
-# ============================================================================
-# Standard Jam actions (overridden for Haiku)
-# ============================================================================
-
-actions Archive bind ARFLAGS {
-	$(AR) $(ARFLAGS) $(<) $(>)
-}
-
-actions Ranlib bind RANLIB {
-	$(RANLIB) $(<)
-}
-
-actions LINK bind LINKFLAGS {
-	$(C++) -o $(<) $(>) $(LINKFLAGS) -l$(HAIKU_LIBS) $(4)
-}
-
-actions Compile bind CCFLAGS {
-	$(C++) -c $(CCFLAGS) -o $(<) $(>)
-}
-
-actions CompileC bind C++FLAGS {
-	$(C++) -c $(C++FLAGS) -o $(<) $(>)
+	$(AR) rcs $(target) $(sources) ;
+	$(RANLIB) $(target) ;
 }

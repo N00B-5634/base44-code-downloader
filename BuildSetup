@@ -1,7 +1,0 @@
-# Haiku Build Setup
-# Include the build rules
-include Jamrules ;
-
-# Subdirectory structure
-SubDir libs ;
-SubDir apps ;

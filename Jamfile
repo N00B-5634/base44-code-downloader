@@ -1,3 +1,6 @@
 # YellowDocs monorepo root Jamfile
 
-include BuildSetup ;
+include Jamrules ;
+
+SubDir libs ;
+SubDir apps ;
