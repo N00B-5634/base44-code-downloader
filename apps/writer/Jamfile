@@ -2,6 +2,13 @@ SubDir HAIKU_TOP apps writer ;
 
 # YellowDocs Writer application
 
+# Resource definitions
+ResourceFile resources/YellowDocsWriter.rdef :
+	resources/YellowDocsWriter.rdef
+	
+	: resources
+;
+
 # Application executable
 Application yellowdocs-writer :
 	# Source files
@@ -36,9 +43,7 @@ Application yellowdocs-writer :
 		resources/app_icon.png
 		resources/document_icon.png
 		resources/toolbar_icons
-		
-		# Include resource definitions
-		: resources/YellowDocsWriter.rdef
+		resources/YellowDocsWriter.rdef
 	
 	# Library dependencies
 	: be trackersupport libyellowdocs-core.a libyellowdocs-ui.a libyellowdocs-utils.a
@@ -51,28 +56,4 @@ Application yellowdocs-writer :
 	: APP_VERSION="1.0.0"
 	: APP_SIGNATURE="application/x-vnd.yellowdocs-writer-app"
 	: APP_MIME_TYPE="application/x-vnd.yellowdocs-writer-app"
-	
-	# Install to apps directory
-	: bin
-;
-
-# Resource definitions
-ResourceFile resources/YellowDocsWriter.rdef :
-	resources/YellowDocsWriter.rdef
-	
-	: resources
-;
-
-# Install application to apps directory
-InstallApplication : yellowdocs-writer
-	: bin
-	: "YellowDocs Writer"
-;
-
-# Install MIME type
-InstallMIME :
-	: mimetypes application/x-vnd.yellowdocs-writer
-	: "YellowDocs Writer Document"
-	: "application/x-vnd.yellowdocs-writer-app"
-	: ".ywrite"
 ;

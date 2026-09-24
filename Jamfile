@@ -7,36 +7,3 @@ SubDir libs core ;
 SubDir libs ui ;
 SubDir libs utils ;
 SubDir apps writer ;
-
-# Root targets
-All :
-	libyellowdocs-core.a
-	libyellowdocs-ui.a
-	libyellowdocs-utils.a
-	yellowdocs-writer
-;
-
-# Install all libraries
-InstallLibraries :
-	libyellowdocs-core.a
-	libyellowdocs-ui.a
-	libyellowdocs-utils.a
-	
-	: lib
-	: private
-;
-
-# Install application
-InstallApplication :
-	yellowdocs-writer
-	
-	: bin
-	: private
-;
-
-# Clean target
-Clean :
-	: @delete libyellowdocs-core.a libyellowdocs-ui.a libyellowdocs-utils.a yellowdocs-writer
-	: @rmdir lib
-	: @rmdir bin
-;
