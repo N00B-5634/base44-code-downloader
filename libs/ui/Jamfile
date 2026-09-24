@@ -20,18 +20,3 @@ SharedLibrary libyellowdocs-ui.a :
 	# Compiler flags
 	: -DYELLOWDOCS_UI_LIBRARY
 ;
-
-# Install headers for development
-Headers :
-	src/Theme.h
-	src/Colors.h
-	src/Toolbar.h
-	src/StatusBar.h
-	src/DocumentView.h
-	src/RulerView.h
-	src/ScrollView.h
-	src/SplitView.h
-	
-	: lib/develop/headers/yellowdocs/ui
-	: private
-;

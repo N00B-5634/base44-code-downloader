@@ -2,40 +2,21 @@ SubDir HAIKU_TOP apps writer ;
 
 # YellowDocs Writer application
 
-# Resource definitions
-ResourceFile resources/YellowDocsWriter.rdef :
-	resources/YellowDocsWriter.rdef
-	
-	: resources
-;
-
 # Application executable
 Application yellowdocs-writer :
 	# Source files
 	src/main.cpp
-	src/YellowDocsWriterApp.h
 	src/YellowDocsWriterApp.cpp
-	src/MainWindow.h
 	src/MainWindow.cpp
-	src/DocumentWindow.h
 	src/DocumentWindow.cpp
-	src/EditorView.h
 	src/EditorView.cpp
-	src/ToolbarView.h
 	src/ToolbarView.cpp
-	src/StatusView.h
 	src/StatusView.cpp
-	src/FilePanel.h
 	src/FilePanel.cpp
-	src/PrintView.h
 	src/PrintView.cpp
-	src/PreferencesWindow.h
 	src/PreferencesWindow.cpp
-	src/AboutWindow.h
 	src/AboutWindow.cpp
-	src/FindPanel.h
 	src/FindPanel.cpp
-	src/ReplacePanel.h
 	src/ReplacePanel.cpp
 	
 	# Resources
@@ -55,5 +36,4 @@ Application yellowdocs-writer :
 	: APP_NAME="YellowDocs Writer"
 	: APP_VERSION="1.0.0"
 	: APP_SIGNATURE="application/x-vnd.yellowdocs-writer-app"
-	: APP_MIME_TYPE="application/x-vnd.yellowdocs-writer-app"
 ;

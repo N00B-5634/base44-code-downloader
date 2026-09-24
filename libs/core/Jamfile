@@ -22,20 +22,3 @@ SharedLibrary libyellowdocs-core.a :
 	# Compiler flags
 	: -DYELLOWDOCS_CORE_LIBRARY
 ;
-
-# Install headers for development
-Headers :
-	src/DocumentTypes.h
-	src/TextStyle.h
-	src/ParagraphStyle.h
-	src/ImageData.h
-	src/DocumentModel.h
-	src/Selection.h
-	src/UndoManager.h
-	src/DocumentIO.h
-	src/MIMETypeRegistration.h
-	src/TrackerIntegration.h
-	
-	: lib/develop/headers/yellowdocs/core
-	: private
-;

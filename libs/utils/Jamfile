@@ -17,15 +17,3 @@ SharedLibrary libyellowdocs-utils.a :
 	# Compiler flags
 	: -DYELLOWDOCS_UTILS_LIBRARY
 ;
-
-# Install headers for development
-Headers :
-	src/FileUtils.h
-	src/MIMEUtils.h
-	src/StringUtils.h
-	src/Preferences.h
-	src/ClipboardUtils.h
-	
-	: lib/develop/headers/yellowdocs/utils
-	: private
-;
